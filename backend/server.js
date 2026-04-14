@@ -35,14 +35,15 @@ app.post("/api/audit/enhance", async (req, res) => {
     .join("\n");
 
   try {
-    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+    // Groq API (gsk_ key) — OpenAI-compatible, ultra-fast inference
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "grok-3-fast",
+        model: "llama-3.3-70b-versatile",
         messages: [
           {
             role: "system",
@@ -76,15 +77,15 @@ Return a JSON object with exactly these four keys:
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`Grok API error ${response.status}: ${err}`);
+      throw new Error(`Groq API error ${response.status}: ${err}`);
     }
 
     const data = await response.json();
     const raw = data.choices?.[0]?.message?.content || "";
 
-    // Extract JSON (Grok occasionally wraps in markdown)
+    // Extract JSON (LLMs occasionally wrap in markdown code fences)
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON found in Grok response");
+    if (!jsonMatch) throw new Error("No JSON found in Groq response");
 
     const insights = JSON.parse(jsonMatch[0]);
     return res.json({ success: true, insights });
