@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { motion, useInView, useMotionValue, useTransform, animate } from "framer-motion";
-import { C, ff, ffd, glass, glassBright } from "../design";
+import { motion, useInView, animate } from "framer-motion";
+import { C, ff, ffd, glass } from "../design";
 
 // ─────────────────────────────────────────────────────────────
 // Constants
@@ -22,56 +22,68 @@ const WEBSITE_TYPES = [
   {
     name: "Restaurant & Food",
     style: "Bold · Immersive",
-    desc: "Full-screen food photography, online menu, reservation & ordering system.",
+    desc: "Full-screen food photography, online menu, table reservations, and ordering — everything a modern restaurant needs.",
     icon: "🍽️",
-    from: "#FF6B35", to: "#F7931E",
-    features: ["Online Ordering", "Menu Builder", "Table Reservations"],
+    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&h=420&fit=crop&q=85&auto=format",
+    fallback: "linear-gradient(135deg,#7f1d1d,#dc2626)",
+    features: ["Online Menu & Ordering", "Table Reservations", "Google Maps Embed"],
     accent: "#FF6B35",
+    price: "$99",
   },
   {
     name: "Medical & Dental",
     style: "Clean · Trustworthy",
-    desc: "Doctor profiles, appointment booking, patient portal integration.",
+    desc: "Doctor profiles, appointment booking form, patient FAQs, and a layout designed to build instant trust.",
     icon: "🏥",
-    from: "#0EA5E9", to: "#06B6D4",
-    features: ["Appointment Booking", "Doctor Profiles", "Patient FAQ"],
+    image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=700&h=420&fit=crop&q=85&auto=format",
+    fallback: "linear-gradient(135deg,#0c4a6e,#0ea5e9)",
+    features: ["Appointment Booking", "Doctor Profiles", "Insurance Info Page"],
     accent: "#0EA5E9",
+    price: "$129",
   },
   {
-    name: "Law & Professional",
+    name: "Law & Professional Services",
     style: "Elegant · Authoritative",
-    desc: "Case studies, consultation booking, trust-building design with dark gold.",
+    desc: "Dark, gold-accented design built to project authority — with case studies, consultation forms, and team pages.",
     icon: "⚖️",
-    from: "#78350F", to: "#D97706",
-    features: ["Case Studies", "Consultation Form", "Team Profiles"],
+    image: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=700&h=420&fit=crop&q=85&auto=format",
+    fallback: "linear-gradient(135deg,#1c1917,#d97706)",
+    features: ["Consultation Booking", "Case Studies", "Attorney Profiles"],
     accent: "#D97706",
+    price: "$129",
   },
   {
     name: "E-commerce / D2C Brand",
     style: "Vibrant · Conversion-First",
-    desc: "Product catalog, cart, payment gateway, WhatsApp integration for orders.",
+    desc: "Product catalog, cart, payment gateway, discount codes, WhatsApp order integration — ready to sell from day one.",
     icon: "🛍️",
-    from: "#7C3AED", to: "#EC4899",
-    features: ["Product Catalog", "Payment Gateway", "WhatsApp Orders"],
-    accent: "#7C3AED",
+    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=700&h=420&fit=crop&q=85&auto=format",
+    fallback: "linear-gradient(135deg,#4c1d95,#ec4899)",
+    features: ["Product Catalog + Cart", "Payment Gateway", "WhatsApp Orders"],
+    accent: "#8B5CF6",
+    price: "$199",
   },
   {
     name: "Real Estate",
     style: "Premium · Visual",
-    desc: "Property listings, virtual tours, EMI calculator, lead capture forms.",
+    desc: "Stunning property listings, high-res galleries, mortgage calculator, and a lead capture system that actually works.",
     icon: "🏡",
-    from: "#065F46", to: "#10B981",
-    features: ["Property Listings", "EMI Calculator", "Virtual Tours"],
+    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=700&h=420&fit=crop&q=85&auto=format",
+    fallback: "linear-gradient(135deg,#064e3b,#10b981)",
+    features: ["Property Listings", "Mortgage Calculator", "Virtual Tour Support"],
     accent: "#10B981",
+    price: "$149",
   },
   {
     name: "Local Trade Services",
-    style: "Bold · Trust-Focused",
-    desc: "For plumbers, electricians, HVAC — built to rank on Google & capture leads.",
+    style: "Bold · Lead-Generating",
+    desc: "Built for plumbers, electricians, HVAC, roofers — ranks on Google, captures leads, and shows off your reviews.",
     icon: "🔧",
-    from: "#1E3A8A", to: "#3B82F6",
-    features: ["Service Areas", "Quote Request", "Google Reviews Feed"],
+    image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=700&h=420&fit=crop&q=85&auto=format",
+    fallback: "linear-gradient(135deg,#1e3a8a,#3b82f6)",
+    features: ["Quote Request Form", "Service Area Map", "Google Reviews Feed"],
     accent: "#3B82F6",
+    price: "$79",
   },
 ];
 
@@ -93,19 +105,52 @@ const HOW_IT_WORKS = [
 
 const PRICING = [
   {
-    name: "Free Audit",    price: "₹0",   desc: "See exactly where you stand",
-    features: ["Profile health score (0-100)", "Top 3 critical issues", "Competitor snapshot", "Instant delivery"],
+    name: "Free Audit",
+    price: "$0",
+    period: "",
+    desc: "See exactly where you stand",
+    features: [
+      "Profile health score (0–100)",
+      "Top 3 critical issues identified",
+      "Competitor snapshot",
+      "AI-powered insights",
+      "Instant — no waiting",
+    ],
     cta: "Get Free Audit", featured: false, ctaAction: "audit",
+    tag: null,
   },
   {
-    name: "Full Optimization", price: "₹7,999", desc: "We fix everything",
-    features: ["Complete 25-point audit", "All issues fixed by us", "Photo & description rewrite", "Review generation setup", "4-week Google Posts", "30-day results check"],
+    name: "GBP Full Optimization",
+    price: "$49",
+    period: "one-time",
+    desc: "We fix your Google listing",
+    features: [
+      "Complete 25-point audit",
+      "All issues fixed by us",
+      "Category + description rewrite",
+      "Photo strategy & upload guide",
+      "Review generation system",
+      "4 weeks of Google Posts",
+      "30-day ranking check-in",
+    ],
     cta: "Get Started", featured: true, ctaAction: "contact",
+    tag: "Most Popular",
   },
   {
-    name: "Website + GBP", price: "₹24,999", desc: "The complete digital presence",
-    features: ["Everything in Full Optimization +", "Custom website (5-7 pages)", "Mobile-first design", "Google-ready SEO structure", "WhatsApp integration", "3-month support"],
+    name: "Website + GBP Bundle",
+    price: "$149",
+    period: "one-time",
+    desc: "Complete digital presence",
+    features: [
+      "Everything in GBP Optimization +",
+      "Custom website (5–7 pages)",
+      "Mobile-first, Google-ready design",
+      "WhatsApp & booking integration",
+      "SEO-optimized from day one",
+      "3 months of free edits",
+    ],
     cta: "Let's Talk", featured: false, ctaAction: "contact",
+    tag: "Best Value",
   },
 ];
 
@@ -380,33 +425,72 @@ function FreeAuditForm() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Website Mockup (CSS art)
+// Website Mockup — real photo inside browser frame
 // ─────────────────────────────────────────────────────────────
-function WebsiteMockup({ from, to, accent, icon }) {
-  const grad = `linear-gradient(135deg, ${from} 0%, ${to} 100%)`;
+function WebsiteMockup({ image, fallback, accent }) {
+  const [imgOk, setImgOk] = useState(true);
+
   return (
-    <div style={{ height: "180px", background: grad, position: "relative", overflow: "hidden", borderRadius: "12px 12px 0 0" }}>
-      {/* Fake browser bar */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "26px", background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", padding: "0 10px", gap: "5px" }}>
-        {["#FF5F57","#FEBC2E","#28C840"].map(c => <div key={c} style={{ width: "7px", height: "7px", borderRadius: "50%", background: c }} />)}
-        <div style={{ flex: 1, height: "12px", background: "rgba(255,255,255,0.12)", borderRadius: "6px", marginLeft: "8px" }} />
+    <div style={{
+      height: "210px", position: "relative", overflow: "hidden",
+      borderRadius: "12px 12px 0 0",
+      background: imgOk ? "#111" : fallback,
+    }}>
+      {/* Real photo */}
+      {imgOk && (
+        <img
+          src={image}
+          alt=""
+          onError={() => setImgOk(false)}
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover", objectPosition: "center top",
+          }}
+        />
+      )}
+
+      {/* Dark gradient so UI overlays read cleanly */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.6) 100%)",
+      }} />
+
+      {/* Browser chrome */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: "28px",
+        background: "rgba(10,10,14,0.75)", backdropFilter: "blur(10px)",
+        display: "flex", alignItems: "center", padding: "0 10px", gap: "5px", zIndex: 3,
+      }}>
+        {["#FF5F57","#FEBC2E","#28C840"].map(c => (
+          <div key={c} style={{ width: "7px", height: "7px", borderRadius: "50%", background: c }} />
+        ))}
+        <div style={{ flex: 1, height: "11px", background: "rgba(255,255,255,0.1)", borderRadius: "5px", marginLeft: "8px" }} />
       </div>
-      {/* Hero area */}
-      <div style={{ position: "absolute", top: "36px", left: "14px", right: "14px" }}>
-        <div style={{ width: "55%", height: "10px", background: "rgba(255,255,255,0.9)", borderRadius: "3px", marginBottom: "6px" }} />
-        <div style={{ width: "38%", height: "7px", background: "rgba(255,255,255,0.5)", borderRadius: "3px", marginBottom: "12px" }} />
-        <div style={{ width: "72px", height: "22px", background: accent, borderRadius: "6px", opacity: 0.95, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: "40px", height: "5px", background: "rgba(255,255,255,0.8)", borderRadius: "2px" }} />
+
+      {/* Simulated sticky nav */}
+      <div style={{
+        position: "absolute", top: "28px", left: 0, right: 0, height: "34px",
+        background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)",
+        display: "flex", alignItems: "center", padding: "0 14px", gap: "10px", zIndex: 3,
+      }}>
+        <div style={{ width: "44px", height: "7px", background: "rgba(255,255,255,0.85)", borderRadius: "3px" }} />
+        <div style={{ flex: 1 }} />
+        {[32,26,30,26].map((w, i) => (
+          <div key={i} style={{ width: w, height: "4px", background: "rgba(255,255,255,0.35)", borderRadius: "2px" }} />
+        ))}
+        <div style={{ width: "52px", height: "20px", background: accent, borderRadius: "5px", opacity: 0.95 }} />
+      </div>
+
+      {/* Hero copy skeleton */}
+      <div style={{ position: "absolute", bottom: "18px", left: "16px", right: "16px", zIndex: 3 }}>
+        <div style={{ width: "68%", height: "11px", background: "rgba(255,255,255,0.92)", borderRadius: "3px", marginBottom: "7px" }} />
+        <div style={{ width: "48%", height: "7px", background: "rgba(255,255,255,0.55)", borderRadius: "3px", marginBottom: "12px" }} />
+        <div style={{ display: "flex", gap: "6px" }}>
+          <div style={{ width: "68px", height: "22px", background: accent, borderRadius: "5px", opacity: 0.95 }} />
+          <div style={{ width: "52px", height: "22px", background: "rgba(255,255,255,0.18)", borderRadius: "5px", border: "1px solid rgba(255,255,255,0.3)" }} />
         </div>
       </div>
-      {/* Feature cards at bottom */}
-      <div style={{ position: "absolute", bottom: "12px", left: "14px", right: "14px", display: "flex", gap: "6px" }}>
-        {[1,2,3].map(i => (
-          <div key={i} style={{ flex: 1, height: "36px", background: "rgba(255,255,255,0.12)", borderRadius: "6px", backdropFilter: "blur(4px)" }} />
-        ))}
-      </div>
-      {/* Large emoji watermark */}
-      <div style={{ position: "absolute", right: "16px", top: "36px", fontSize: "42px", opacity: 0.15 }}>{icon}</div>
     </div>
   );
 }
@@ -525,7 +609,7 @@ function ContactSection() {
 // ─────────────────────────────────────────────────────────────
 // Main Page
 // ─────────────────────────────────────────────────────────────
-export default function LandingPage({ onNavigate }) {
+export default function LandingPage() {
   return (
     <div style={{ position: "relative", zIndex: 1 }}>
       <BackgroundOrbs />
@@ -872,44 +956,57 @@ export default function LandingPage({ onNavigate }) {
               <motion.div
                 key={i}
                 {...fadeUp(i * 0.08)}
-                whileHover={{ y: -8, scale: 1.01 }}
+                whileHover={{ y: -8 }}
                 style={{
                   ...glass, overflow: "hidden",
                   border: "1px solid rgba(255,255,255,0.08)",
-                  cursor: "pointer",
+                  cursor: "pointer", display: "flex", flexDirection: "column",
                 }}
               >
-                <WebsiteMockup from={site.from} to={site.to} accent={site.accent} icon={site.icon} />
-                <div style={{ padding: "20px" }}>
+                <WebsiteMockup image={site.image} fallback={site.fallback} accent={site.accent} />
+
+                <div style={{ padding: "18px 20px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
+                  {/* Top row */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                     <span style={{ fontSize: "10px", fontWeight: 700, color: site.accent, textTransform: "uppercase", letterSpacing: "1px" }}>
                       {site.style}
                     </span>
                     <span style={{ fontSize: "18px" }}>{site.icon}</span>
                   </div>
-                  <h3 style={{ fontFamily: ffd, fontSize: "16px", fontWeight: 800, marginBottom: "8px" }}>{site.name}</h3>
-                  <p style={{ fontSize: "12.5px", color: C.mutedLight, lineHeight: 1.6, marginBottom: "14px" }}>{site.desc}</p>
-                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
+
+                  <h3 style={{ fontFamily: ffd, fontSize: "16px", fontWeight: 800, marginBottom: "6px" }}>{site.name}</h3>
+                  <p style={{ fontSize: "12.5px", color: C.mutedLight, lineHeight: 1.6, marginBottom: "12px", flex: 1 }}>{site.desc}</p>
+
+                  {/* Feature pills */}
+                  <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "14px" }}>
                     {site.features.map(f => (
                       <span key={f} style={{
-                        fontSize: "10px", padding: "3px 10px", borderRadius: "100px",
+                        fontSize: "10px", padding: "3px 9px", borderRadius: "100px",
                         background: site.accent + "18", color: site.accent, fontWeight: 600,
                       }}>{f}</span>
                     ))}
                   </div>
-                  <a
-                    href={`${WA_BASE}${encodeURIComponent(`Hi Prafful! I'm interested in a ${site.name} website. Could you share examples and pricing?`)}`}
-                    target="_blank" rel="noreferrer"
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                      padding: "10px", borderRadius: "8px",
-                      background: site.accent + "18", color: site.accent,
-                      fontSize: "12.5px", fontWeight: 700, textDecoration: "none", fontFamily: ff,
-                      border: `1px solid ${site.accent}30`,
-                    }}
-                  >
-                    Get a Quote →
-                  </a>
+
+                  {/* Price + CTA row */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div>
+                      <div style={{ fontSize: "10px", color: C.muted, fontWeight: 600 }}>STARTING FROM</div>
+                      <div style={{ fontFamily: ffd, fontSize: "22px", fontWeight: 900, color: C.white, lineHeight: 1 }}>{site.price}</div>
+                    </div>
+                    <a
+                      href={`${WA_BASE}${encodeURIComponent(`Hi Prafful! I'm interested in a ${site.name} website (starting at ${site.price}). Could you share more details?`)}`}
+                      target="_blank" rel="noreferrer"
+                      style={{
+                        flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                        padding: "10px 12px", borderRadius: "8px",
+                        background: site.accent + "18", color: site.accent,
+                        fontSize: "12.5px", fontWeight: 700, textDecoration: "none", fontFamily: ff,
+                        border: `1px solid ${site.accent}30`,
+                      }}
+                    >
+                      Get This Design →
+                    </a>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -947,21 +1044,32 @@ export default function LandingPage({ onNavigate }) {
                   animation: plan.featured ? "borderGlow 4s ease-in-out infinite" : "none",
                 }}
               >
-                {plan.featured && (
+                {/* Tag ribbon */}
+                {plan.tag && (
                   <div style={{
-                    position: "absolute", top: "14px", right: "-28px",
-                    background: C.grad, color: "#fff",
-                    fontSize: "9px", fontWeight: 800, padding: "4px 36px",
-                    transform: "rotate(45deg)", letterSpacing: "1px",
-                  }}>POPULAR</div>
+                    position: "absolute", top: "14px", right: "-30px",
+                    background: plan.featured ? C.grad : C.gradGold,
+                    color: "#fff", fontSize: "9px", fontWeight: 800,
+                    padding: "4px 38px", transform: "rotate(45deg)", letterSpacing: "1px",
+                  }}>{plan.tag}</div>
                 )}
+
                 <div style={{ fontSize: "11.5px", fontWeight: 700, color: plan.featured ? C.green : C.mutedLight, marginBottom: "4px" }}>
                   {plan.name}
                 </div>
-                <div style={{ fontFamily: ffd, fontSize: "38px", fontWeight: 900, letterSpacing: "-1px", lineHeight: 1 }}>
-                  {plan.price}
+
+                {/* Price + period */}
+                <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", lineHeight: 1 }}>
+                  <div style={{ fontFamily: ffd, fontSize: "40px", fontWeight: 900, letterSpacing: "-1px" }}>
+                    {plan.price}
+                  </div>
+                  {plan.period && (
+                    <div style={{ fontSize: "11px", color: C.muted, paddingBottom: "6px", fontWeight: 500 }}>
+                      {plan.period}
+                    </div>
+                  )}
                 </div>
-                <div style={{ fontSize: "12.5px", color: C.mutedLight, margin: "6px 0 22px" }}>{plan.desc}</div>
+                <div style={{ fontSize: "12.5px", color: C.mutedLight, margin: "6px 0 20px" }}>{plan.desc}</div>
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "18px", marginBottom: "22px" }}>
                   {plan.features.map((f, fi) => (
                     <div key={fi} style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: "10px" }}>
