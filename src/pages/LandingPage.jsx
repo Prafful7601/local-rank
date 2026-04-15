@@ -227,41 +227,22 @@ function BackgroundOrbs() {
 const NICHES = ["Plumbing","HVAC","Electrical","Dental","Roofing","Landscaping","Chiropractic","Auto Repair","Physical Therapy","Restaurant","Medical","Law Firm","Real Estate","Other"];
 
 function FreeAuditForm() {
-  const [biz,     setBiz]     = useState("");
-  const [city,    setCity]    = useState("");
-  const [niche,   setNiche]   = useState("Plumbing");
-  const [loading, setLoading] = useState(false);
-  const [result,  setResult]  = useState(null);
-  const [aiInsight, setAiInsight] = useState(null);
-  const [error,   setError]   = useState("");
+  const [biz,   setBiz]   = useState("");
+  const [city,  setCity]  = useState("");
+  const [niche, setNiche] = useState("Plumbing");
+  const [sent,  setSent]  = useState(false);
+  const [error, setError] = useState("");
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
     if (!biz.trim() || !city.trim()) { setError("Please fill in both fields"); return; }
-    setError(""); setLoading(true); setResult(null); setAiInsight(null);
+    setError("");
 
-    // Import audit engine dynamically
-    const { generateAudit } = await import("../engine/audit.js");
-    await new Promise(r => setTimeout(r, 900));
-    const data = generateAudit(biz.trim(), city.trim(), niche);
-    setResult(data);
-
-    // Try Grok enhancement
-    try {
-      const res = await fetch("/api/audit/enhance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          business: data.business, city: data.city,
-          niche: data.niche, score: data.score,
-          issues: data.issues.slice(0, 5),
-        }),
-      });
-      const json = await res.json();
-      if (json.success && json.insights) setAiInsight(json.insights);
-    } catch {}
-
-    setLoading(false);
+    const waMsg = encodeURIComponent(
+      `Hi Prafful! I'd like a free GBP audit for my business:\n\nBusiness: ${biz.trim()}\nCity: ${city.trim()}\nIndustry: ${niche}\n\nCan you send me the full audit report?`
+    );
+    window.open(`${WA_BASE}${waMsg}`, "_blank");
+    setSent(true);
   }
 
   const inp = {
@@ -271,123 +252,28 @@ function FreeAuditForm() {
     fontSize: "14px", fontFamily: ff,
   };
 
-  if (result) {
-    const color = result.score < 40 ? C.red : result.score < 60 ? C.orange : C.green;
-    const topIssues = result.issues.filter(i => i.severity === "HIGH").slice(0, 3);
-    const waMsg = encodeURIComponent(
-      `Hi Prafful! I just ran a free GBP audit for ${result.business} in ${result.city} and got a score of ${result.score}/100. I'd love to discuss the full optimization. Can we connect?`
-    );
+  if (sent) {
     return (
-      <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
-        {/* Score */}
-        <div style={{
-          ...glass, padding: "24px", marginBottom: "16px", textAlign: "center",
-          border: `1px solid ${color}33`,
-        }}>
-          <div style={{ fontSize: "11px", color: C.mutedLight, textTransform: "uppercase", letterSpacing: "2px", marginBottom: "8px" }}>
-            Profile Health Score
-          </div>
-          <div style={{ fontFamily: ffd, fontSize: "72px", fontWeight: 900, color, lineHeight: 1 }}>
-            {result.score}
-          </div>
-          <div style={{ fontSize: "13px", color: C.mutedLight, marginTop: "4px" }}>out of 100</div>
-          <div style={{
-            width: "100%", height: "6px", background: "rgba(255,255,255,0.08)",
-            borderRadius: "3px", marginTop: "16px", overflow: "hidden",
-          }}>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${result.score}%` }}
-              transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-              style={{ height: "100%", background: color, borderRadius: "3px" }}
-            />
-          </div>
-        </div>
-
-        {/* AI insight */}
-        {aiInsight && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            style={{
-              ...glass, padding: "16px 20px", marginBottom: "16px",
-              border: "1px solid rgba(59,130,246,0.25)",
-              background: "rgba(59,130,246,0.06)",
-            }}
-          >
-            <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: "8px" }}>
-              <span style={{ fontSize: "16px" }}>🤖</span>
-              <span style={{ fontSize: "11px", fontWeight: 700, color: C.blue, textTransform: "uppercase", letterSpacing: "1px" }}>
-                AI Insight (Grok)
-              </span>
-            </div>
-            <p style={{ fontSize: "13px", color: C.mutedLight, lineHeight: 1.7, marginBottom: "8px" }}>
-              {aiInsight.summary}
-            </p>
-            {aiInsight.quickWin && (
-              <div style={{ background: "rgba(0,210,106,0.08)", borderRadius: "6px", padding: "10px 12px", fontSize: "12.5px", color: C.green }}>
-                <strong>Quick win:</strong> {aiInsight.quickWin}
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Top issues */}
-        <div style={{ ...glass, padding: "16px 20px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: C.mutedLight, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>
-            Top 3 Critical Issues
-          </div>
-          {topIssues.map((iss, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + i * 0.1 }}
-              style={{
-                display: "flex", gap: "10px", padding: "10px 0",
-                borderBottom: i < topIssues.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-              }}
-            >
-              <span style={{
-                fontSize: "9px", fontWeight: 800, padding: "3px 8px", borderRadius: "4px",
-                background: C.redDim, color: C.red, flexShrink: 0, alignSelf: "flex-start", marginTop: "2px",
-              }}>HIGH</span>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px" }}>{iss.title}</div>
-                <div style={{ fontSize: "11.5px", color: C.mutedLight, lineHeight: 1.5 }}>{iss.impact}</div>
-              </div>
-            </motion.div>
-          ))}
-          <div style={{ marginTop: "12px", fontSize: "12px", color: C.mutedLight }}>
-            + {result.issues.length - 3} more issues in the full report
-          </div>
-        </div>
-
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: "10px" }}>
-          <a
-            href={`${WA_BASE}${waMsg}`}
-            target="_blank" rel="noreferrer"
-            style={{
-              flex: 1, padding: "13px", borderRadius: "10px",
-              background: "#25D366", color: "#fff",
-              fontSize: "13.5px", fontWeight: 700, textAlign: "center",
-              textDecoration: "none", fontFamily: ff,
-            }}
-          >
-            Get Full Audit on WhatsApp →
-          </a>
-          <button
-            onClick={() => { setResult(null); setAiInsight(null); }}
-            style={{
-              padding: "13px 18px", borderRadius: "10px",
-              background: "rgba(255,255,255,0.05)", color: C.mutedLight,
-              border: "1px solid rgba(255,255,255,0.08)",
-              fontSize: "13px", cursor: "pointer", fontFamily: ff,
-            }}
-          >
-            New Audit
-          </button>
-        </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+        style={{ ...glass, padding: "28px 24px", textAlign: "center", border: "1px solid rgba(0,210,106,0.25)" }}
+      >
+        <div style={{ fontSize: "40px", marginBottom: "12px" }}>✅</div>
+        <div style={{ fontFamily: ffd, fontSize: "20px", fontWeight: 700, marginBottom: "8px" }}>WhatsApp opened!</div>
+        <p style={{ fontSize: "13px", color: C.mutedLight, lineHeight: 1.7, marginBottom: "20px" }}>
+          Just send the message to Prafful and he'll run the full audit and send it back — usually within a few hours.
+        </p>
+        <button
+          onClick={() => { setSent(false); setBiz(""); setCity(""); }}
+          style={{
+            padding: "10px 22px", borderRadius: "8px",
+            background: "rgba(255,255,255,0.07)", color: C.mutedLight,
+            border: "1px solid rgba(255,255,255,0.1)",
+            fontSize: "13px", cursor: "pointer", fontFamily: ff,
+          }}
+        >
+          Submit another business
+        </button>
       </motion.div>
     );
   }
@@ -402,24 +288,22 @@ function FreeAuditForm() {
       {error && <div style={{ fontSize: "12.5px", color: C.red, padding: "8px 12px", background: C.redDim, borderRadius: "8px" }}>{error}</div>}
       <motion.button
         type="submit"
-        disabled={loading}
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.98 }}
         style={{
-          padding: "15px", borderRadius: "10px",
-          background: loading ? "rgba(255,255,255,0.08)" : C.grad,
+          padding: "15px", borderRadius: "10px", background: C.grad,
           color: "#fff", fontSize: "15px", fontWeight: 700,
-          border: "none", cursor: loading ? "wait" : "pointer",
-          fontFamily: ff, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-          boxShadow: loading ? "none" : "0 0 30px rgba(0,210,106,0.2)",
+          border: "none", cursor: "pointer", fontFamily: ff,
+          display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+          boxShadow: "0 0 30px rgba(0,210,106,0.2)",
         }}
       >
-        {loading
-          ? <><span style={{ width: "16px", height: "16px", border: "2.5px solid rgba(255,255,255,0.2)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} /> Analyzing your profile…</>
-          : "⚡ Get My Free Audit Score"
-        }
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        Get My Free Audit on WhatsApp
       </motion.button>
-      <p style={{ fontSize: "11px", color: C.muted, textAlign: "center" }}>Free · Instant · No credit card</p>
+      <p style={{ fontSize: "11px", color: C.muted, textAlign: "center" }}>Free · Prafful sends it personally · No spam</p>
     </form>
   );
 }

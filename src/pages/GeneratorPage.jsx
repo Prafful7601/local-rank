@@ -123,46 +123,78 @@ export default function GeneratorPage({ onNavigate }) {
   const [business, setBusiness] = useState(savedForm.business || "");
   const [city,     setCity]     = useState(savedForm.city     || "");
   const [niche,    setNiche]    = useState(savedForm.niche    || "Plumbing");
+  const [gbpUrl,   setGbpUrl]   = useState(savedForm.gbpUrl   || "");
   const [reportType, setReportType] = useState("full");
   const [result,   setResult]   = useState(null);
   const [loading,  setLoading]  = useState(false);
+  const [aiMode,   setAiMode]   = useState(false);
   const [error,    setError]    = useState("");
   const [history,  setHistory]  = useState(loadHistory);
   const [toast,    setToast]    = useState(null);
 
   // Persist form values
   useEffect(() => {
-    try { localStorage.setItem(LS_FORM, JSON.stringify({ business, city, niche })); } catch {}
-  }, [business, city, niche]);
+    try { localStorage.setItem(LS_FORM, JSON.stringify({ business, city, niche, gbpUrl })); } catch {}
+  }, [business, city, niche, gbpUrl]);
 
   function showToast(msg, type = "success") {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 2500);
   }
 
-  function generate() {
+  async function generate() {
     if (!business.trim() || !city.trim()) {
       setError("Enter both business name and city");
       return;
     }
     setError("");
     setLoading(true);
-    setTimeout(() => {
-      const data = generateAudit(business.trim(), city.trim(), niche);
-      setResult(data);
-      try { localStorage.setItem(LS_LAST, JSON.stringify(data)); } catch {}
-      const newEntry = {
-        business: business.trim(), city: city.trim(), niche,
-        score: data.score, time: new Date().toLocaleTimeString(),
-      };
-      const newHistory = [newEntry, ...history.filter(h =>
-        !(h.business === newEntry.business && h.city === newEntry.city && h.niche === newEntry.niche)
-      )].slice(0, 10);
-      setHistory(newHistory);
-      saveHistory(newHistory);
-      setLoading(false);
-      showToast("Audit generated!");
-    }, 800);
+
+    let data;
+    const url = gbpUrl.trim();
+
+    if (url) {
+      // AI-powered real analysis via Groq
+      setAiMode(true);
+      try {
+        const res = await fetch("/api/audit/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ business: business.trim(), city: city.trim(), niche, gbpUrl: url }),
+        });
+        const json = await res.json();
+        if (json.success && json.audit) {
+          data = json.audit;
+        } else {
+          // Fall back to local engine if API fails
+          data = generateAudit(business.trim(), city.trim(), niche);
+          showToast("AI unavailable — used local engine", "info");
+        }
+      } catch {
+        data = generateAudit(business.trim(), city.trim(), niche);
+        showToast("AI unavailable — used local engine", "info");
+      }
+    } else {
+      // Local seeded engine (fast, offline)
+      setAiMode(false);
+      await new Promise(r => setTimeout(r, 700));
+      data = generateAudit(business.trim(), city.trim(), niche);
+    }
+
+    setResult(data);
+    try { localStorage.setItem(LS_LAST, JSON.stringify(data)); } catch {}
+    const newEntry = {
+      business: business.trim(), city: city.trim(), niche,
+      score: data.score, time: new Date().toLocaleTimeString(),
+      aiPowered: !!data.aiPowered,
+    };
+    const newHistory = [newEntry, ...history.filter(h =>
+      !(h.business === newEntry.business && h.city === newEntry.city && h.niche === newEntry.niche)
+    )].slice(0, 10);
+    setHistory(newHistory);
+    saveHistory(newHistory);
+    setLoading(false);
+    showToast(data.aiPowered ? "AI audit complete!" : "Audit generated!");
   }
 
   function printPDF() {
@@ -252,6 +284,26 @@ export default function GeneratorPage({ onNavigate }) {
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
+              {/* GBP URL — optional, enables AI-powered real analysis */}
+              <div>
+                <label style={lbl}>
+                  GBP URL{" "}
+                  <span style={{ color: C.green, fontWeight: 800 }}>★ AI</span>
+                  <span style={{ color: C.muted, fontWeight: 500, textTransform: "none", letterSpacing: 0 }}> — optional, for real analysis</span>
+                </label>
+                <input
+                  style={inp}
+                  placeholder="https://maps.google.com/maps/place/..."
+                  value={gbpUrl}
+                  onChange={e => setGbpUrl(e.target.value)}
+                  onFocus={() => setError("")}
+                />
+                {gbpUrl.trim() && (
+                  <div style={{ fontSize: "11px", color: C.green, marginTop: "4px" }}>
+                    ✓ Groq will analyze this profile for real insights
+                  </div>
+                )}
+              </div>
               <div>
                 <label style={lbl}>Business Name</label>
                 <input
@@ -337,9 +389,9 @@ export default function GeneratorPage({ onNavigate }) {
                       border: "2px solid rgba(11,14,19,0.3)", borderTopColor: C.bg,
                       borderRadius: "50%", animation: "spin 0.6s linear infinite",
                     }} />
-                    Generating…
+                    {gbpUrl.trim() ? "Analyzing real profile with AI…" : "Generating…"}
                   </>
-                ) : "⚡ Generate Audit Report"}
+                ) : gbpUrl.trim() ? "🤖 Analyze with AI" : "⚡ Generate Audit Report"}
               </button>
             </div>
           </div>
@@ -468,7 +520,17 @@ export default function GeneratorPage({ onNavigate }) {
                 padding: "12px 18px", borderBottom: `1px solid ${C.border}`,
                 background: C.surface2, display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
-                <span style={{ fontSize: "13px", fontWeight: 600 }}>Audit Preview</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 600 }}>Audit Preview</span>
+                  {result?.aiPowered && (
+                    <span style={{
+                      fontSize: "9px", fontWeight: 800, padding: "2px 8px", borderRadius: "100px",
+                      background: C.greenDim, color: C.green, border: `1px solid ${C.greenBorder}`,
+                    }}>
+                      🤖 AI-Powered
+                    </span>
+                  )}
+                </div>
                 <span style={{ fontSize: "11px", color: C.muted }}>
                   {reportType === "full" ? "Full Report · ~4 pages" : "Free Teaser · 1 page"}
                 </span>
