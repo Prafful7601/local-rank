@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { C, ff, ffd, glass } from "./design";
+import { C, ff, ffd } from "./design";
 import LandingPage from "./pages/LandingPage";
 import GeneratorPage from "./pages/GeneratorPage";
 import TemplatesPage from "./pages/TemplatesPage";
@@ -166,6 +166,7 @@ export default function App() {
         body { background: ${C.bg}; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+        select option { color: #111 !important; background: #fff !important; }
         input, select, textarea { outline: none; }
         input:focus, select:focus, textarea:focus { border-color: ${C.green} !important; }
         a { color: inherit; }

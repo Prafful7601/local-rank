@@ -26,6 +26,7 @@ export const C = {
   red:         "#EF4444",
   redDim:      "rgba(239,68,68,0.12)",
   orange:      "#F97316",
+  orangeDim:   "rgba(249,115,22,0.12)",
   // Gradients
   grad:        "linear-gradient(135deg, #00D26A 0%, #3B82F6 100%)",
   gradPurple:  "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
